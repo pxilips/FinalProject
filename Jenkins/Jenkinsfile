@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+    stages {
+        stage('GIT') {
+            steps {
+                git branch: 'main', credentialsId: 'pxilips-GIT', url: 'https://github.com/pxilips/Final-Project.git'
+        }
+    }
+        stage('Monitoring') {  
+            steps {
+                sh 'docker pull grafana/grafana:latest'
+                sh 'docker run -d -p 3000:3000 --name=grafana -v grafana-storage:/var/lib/grafana grafana/grafana'
+        }
+           
+        }
+        stage('Azure Credentials') {
+            steps {
+                sh 'az login'
+         }
+    }
+        stage('Terraform Init') {
+            steps{
+                sh 'terraform init'
+            }
+        }
+        stage('Terraform Apply') {
+            steps{
+                sh 'terraform apply --auto-approve'
+            }
+        }
+        stage ('MySQL') {
+            steps {
+                sh 'mysql --host=mysql-prod-rd.mysql.database.azure.com --user=******@mysql-prod-rd --password=****** my-db < ./computer_mysql_script.sql'
+            }
+        }
+    }
+}
